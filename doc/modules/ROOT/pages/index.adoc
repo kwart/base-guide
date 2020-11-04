@@ -79,7 +79,7 @@ to the application server.
 include::../../../../hazelcast.yml[]
 ----
 
-== Hazelcast Client as a Windows service
+== Configure Hazelcast Client
 
 [source,powershell]
 ----
