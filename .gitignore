@@ -10,3 +10,5 @@ target/
 *.ipr
 *.iws
 *.txt
+index.html
+index.pdf

@@ -1,37 +1,92 @@
-////
-This is the base template for Hazelcast integration module guides.
-
-You can clone this repository, work on it and create your guide, and then push to a new repository.
-////
-
-:github-address: [github-repo-address-of-your-guide]
-
+:github-address: https://github.com/hazelcast-guides/active-directory-authentication
 :templates-url: https://raw.githubusercontent.com/hazelcast-guides/adoc-templates/master
 
-// Use this relative url if you are going to publish the guide on the guides site.
-// Note that this url will not work locally and raise asciidoctor errors.
-// So, complete the guide with the above url and set the below one just before 
-// publishing on the guides site.
-//
-// :templates-url: templates:ROOT:page$/
+= Active Directory authentication
 
-= Title
-
-// Content entered directly below the header but before the first section heading is called the preamble.
+This guide will get you started with the Hazelcast IMDG Enterprise Kerberos authentication
+in Microsoft Active Directory domains.
 
 include::{templates-url}/link-to-repo.adoc[]
 
 == What You’ll Learn
 
-// Define the problem and tell reader what he/she will learn from this guide.
+In this guide, you will learn how to configure Hazelcast IMDG Enterprise to authenticate
+to cluster members and clients using Kerberos tickets in Microsoft Active Directory domain.
 
 == Prerequisites
 
-// Define the prerequisites for the guide.
+- Hazelcast Enterprise and its License Key (You can ask for a trial license through the https://hazelcast.com/get-started/#deploymenttype-imdg[license form]).
+- Active Directory server (AD) and the 2nd Windows server connected in the Active Directory domain
+include::{templates-url}/microservices/prerequisites.adoc[]
 
-////
-Write the steps in your guide here by making each step a different section
-////
+=== Active Directory domain in MS Azure
+If you don't have Active Directory domain configured in your environment, you can provision
+one in MS Azure. There is an Azure deployment template on GitHub which
+starts a domain for you on few clicks:
+
+* https://github.com/maxskunkworks/TLG/tree/master/tlg-base-config_3-vm
+
+== Environment
+
+The sample environment used in this guide contains 2 Windows servers
+
+- Domain controller with Active Directory (hostname: `dc1`)
+- Application server attached to the domain (hostname: `app1`)
+
+Hazelcast connections are based on IP addresses, so they will be also necessary in the
+Kerberos authentication configuration.
+
+Following addresses are used our environment:
+
+[source]
+----
+10.0.0.10 dc1
+10.0.0.11 app1
+----
+
+You have to replace the hostname and IP values to fit your environment in commands
+and Hazelcast configuration files used in this guide.
+
+== Create member accounts in Active Directory
+
+We will use the PowerShell on the Domain controller to create an Active Directory
+user account for each Hazelcast member.
+We don't need to provide passwords, Active Directory will generate random ones for us.
+We will also need a keytab file for each member.
+Keytab files will contain the password as a shared secret used for authentication and Kerberos
+ticket verification.
+
+[source,powershell]
+----
+New-ADUser -Name hz-app1 -PasswordNotRequired $True `
+  -PasswordNeverExpires $True -PassThru -Enabled $True
+ktpass -princ hz/10.0.0.11@ACME.com -mapuser hz-app1@ACME.COM `
+  -out hz-app1.keytab +rndPass -ptype KRB5_NT_PRINCIPAL
+
+New-ADUser -Name hz-dc1 -PasswordNotRequired $True `
+  -PasswordNeverExpires $True -PassThru -Enabled $True
+ktpass -princ hz/10.0.0.10@ACME.com -mapuser hz-dc1@ACME.COM `
+  -out hz-dc1.keytab +rndPass -ptype KRB5_NT_PRINCIPAL
+----
+
+Copy the newly generated `hz-app1.keytab` file from the domain controller
+to the application server.
+
+== Configure Hazelcast members
+
+[source,yaml]
+----
+include::../../../../hazelcast.yml[]
+----
+
+== Hazelcast Client as a Windows service
+
+[source,powershell]
+----
+New-ADServiceAccount -Name hztest -Enabled $true -RestrictToSingleComputer
+Add-ADComputerServiceAccount -Identity APP1 -ServiceAccount hztest
+Install-ADServiceAccount -Identity hztest
+----
 
 == Summary
 
@@ -43,4 +98,4 @@ Write the steps in your guide here by making each step a different section
 // Use relative links used on the home page (see https://raw.githubusercontent.com/hazelcast-guides/guides-site/master/home/modules/ROOT/pages/index.adoc)
 
 - xref:hazelcast-embedded-springboot:ROOT:index.adoc[Hazelcast in SpringBoot]
-- xref:hazelcast-quarkus:ROOT:index.adoc[Hazelcast Client for Quarkus] 
+- xref:hazelcast-quarkus:ROOT:index.adoc[Hazelcast Client for Quarkus]
