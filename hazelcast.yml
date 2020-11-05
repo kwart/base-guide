@@ -31,6 +31,7 @@ hazelcast:
               role-name-attribute: CN
         identity:
           kerberos:
+            realm: ACME.COM
             security-realm: krb5Initiator
       - name: krb5Acceptor
         authentication:

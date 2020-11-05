@@ -17,11 +17,11 @@ to cluster members and clients using Kerberos tickets in Microsoft Active Direct
 
 - Hazelcast IMDG Enterprise and its License Key (You can ask for a trial license through the https://hazelcast.com/get-started/#deploymenttype-imdg[license form]).
 - Active Directory server (AD) and the 2nd Windows server connected in the Active Directory domain
-- JDK 1.8+
-- Apache Maven 3.2+
+- JDK 1.8+ (You can get Windows installer on https://www.azul.com/downloads/zulu-community/?version=java-11-lts&os=windows&architecture=x86-64-bit&package=jdk[Azul Zulu download page] for instance.)
 - A text editor or IDE
 
 === Active Directory domain in MS Azure
+
 If you don't have Active Directory domain configured in your environment, you can provision
 one in MS Azure. There is an Azure deployment template on GitHub which
 starts a domain for you on few clicks:
@@ -61,6 +61,19 @@ port numbers (`5701-5703`). You can use the following PowerShell command:
 ----
 include::../../../../allow-hazelcast-port.ps1[]
 ----
+
+=== Kerberos configuration file
+
+Java searches its Kerberos configuration in `krb5.ini` file.
+One of its possible locations is the Windows installation directory.
+So let's create one simple configuration file `C:\Windows\krb5.ini`
+on both servers.
+
+[source,powershell]
+----
+include::../../../../krb5.ini[]
+----
+
 
 == Create member accounts in Active Directory
 
@@ -113,12 +126,6 @@ It configures network discovery method and security. Don't forget to replace
 
 == Configure Hazelcast Client
 
-[source,powershell]
-----
-New-ADServiceAccount -Name hztest -Enabled $true -RestrictToSingleComputer
-Add-ADComputerServiceAccount -Identity APP1 -ServiceAccount hztest
-Install-ADServiceAccount -Identity hztest
-----
 
 == Summary
 
