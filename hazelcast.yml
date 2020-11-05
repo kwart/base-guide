@@ -43,7 +43,7 @@ hazelcast:
                 doNotPrompt: true
                 useKeyTab: true
                 storeKey: true
-                principal: hz/10.0.0.11@ACME.COM
+                principal: hz/10.0.0.11@acme.com
                 keyTab: hz-app1.keytab
       - name: krb5Initiator
         authentication:
@@ -56,7 +56,7 @@ hazelcast:
                 doNotPrompt: true
                 useKeyTab: true
                 storeKey: true
-                principal: hz/10.0.0.11@ACME.COM
+                principal: hz/10.0.0.11@acme.com
                 keyTab: hz-app1.keytab
     member-authentication:
       realm: kerberosRealm

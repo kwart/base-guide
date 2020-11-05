@@ -15,9 +15,11 @@ to cluster members and clients using Kerberos tickets in Microsoft Active Direct
 
 == Prerequisites
 
-- Hazelcast Enterprise and its License Key (You can ask for a trial license through the https://hazelcast.com/get-started/#deploymenttype-imdg[license form]).
+- Hazelcast IMDG Enterprise and its License Key (You can ask for a trial license through the https://hazelcast.com/get-started/#deploymenttype-imdg[license form]).
 - Active Directory server (AD) and the 2nd Windows server connected in the Active Directory domain
-include::{templates-url}/microservices/prerequisites.adoc[]
+- JDK 1.8+
+- Apache Maven 3.2+
+- A text editor or IDE
 
 === Active Directory domain in MS Azure
 If you don't have Active Directory domain configured in your environment, you can provision
@@ -33,6 +35,9 @@ The sample environment used in this guide contains 2 Windows servers
 - Domain controller with Active Directory (hostname: `dc1`)
 - Application server attached to the domain (hostname: `app1`)
 
+The servers are connected in a domain named `acme.com`. It's also the Kerberos
+realm name.
+
 Hazelcast connections are based on IP addresses, so they will be also necessary in the
 Kerberos authentication configuration.
 
@@ -47,6 +52,16 @@ Following addresses are used our environment:
 You have to replace the hostname and IP values to fit your environment in commands
 and Hazelcast configuration files used in this guide.
 
+=== Hazelcast port on Windows Firewall
+
+If you have Windows Firewall enabled, then allow access on the default Hazelcast
+port numbers (`5701-5703`). You can use the following PowerShell command:
+
+[source,powershell]
+----
+include::../../../../allow-hazelcast-port.ps1[]
+----
+
 == Create member accounts in Active Directory
 
 We will use the PowerShell on the Domain controller to create an Active Directory
@@ -60,24 +75,41 @@ ticket verification.
 ----
 New-ADUser -Name hz-app1 -PasswordNotRequired $True `
   -PasswordNeverExpires $True -PassThru -Enabled $True
-ktpass -princ hz/10.0.0.11@ACME.com -mapuser hz-app1@ACME.COM `
+ktpass -princ hz/10.0.0.11@acme.com -mapuser hz-app1@acme.com `
   -out hz-app1.keytab +rndPass -ptype KRB5_NT_PRINCIPAL
 
 New-ADUser -Name hz-dc1 -PasswordNotRequired $True `
   -PasswordNeverExpires $True -PassThru -Enabled $True
-ktpass -princ hz/10.0.0.10@ACME.com -mapuser hz-dc1@ACME.COM `
+ktpass -princ hz/10.0.0.10@acme.com -mapuser hz-dc1@acme.com `
   -out hz-dc1.keytab +rndPass -ptype KRB5_NT_PRINCIPAL
 ----
 
-Copy the newly generated `hz-app1.keytab` file from the domain controller
+The `hz/10.0.0.10@acme.com` and `hz/10.0.0.11@acme.com` are Service Principal Names (SPN)
+and we will reference them in the Hazelcast member configuration.
+The `hz/` is a service prefix, followed by the IP address and the Kerberos realm name.
+
+Move the newly generated keytab files to `bin` directory within the Hazelcast
+Enterprise installation (e.g. `C:\hazelcast-enterprise-4.1\bin`).
+
+NOTE: As the `hz-app1` account will be used by the application server we need to
+move the newly generated `hz-app1.keytab` file from the domain controller
 to the application server.
 
 == Configure Hazelcast members
 
+We will use YAML configuration file located in the `bin`, so we start the member configuration
+with removing `hazelcast.xml` file in the same folder.
+
+Now we create the new configuration file called `hazelcast.yml`  in `bin` directory.
+
+.hazelcast.yml
 [source,yaml]
 ----
 include::../../../../hazelcast.yml[]
 ----
+
+It configures network discovery method and security. Don't forget to replace
+`PUT_THE_LICENSE_KEY_HERE` placeholder with a real license key.
 
 == Configure Hazelcast Client
 
