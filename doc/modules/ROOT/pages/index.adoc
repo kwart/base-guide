@@ -169,7 +169,7 @@ Don't forget to replace
 `PUT_THE_LICENSE_KEY_HERE` placeholder with a real license key.
 
 Starting Hazelcast members on both servers should now result in forming
-a new Hazelcast cluster with both member.
+a new Hazelcast cluster with both members.
 
 .Screenshot - Running Hazelcast cluster
 image::screenshots/client-running.png[Running Hazelcast cluster.]
@@ -332,10 +332,6 @@ configuration.
 We don't define a keytab file, but we want to use existing credentials,
 so we set the `useTicketCache` option value to `true`.
 
-// Now we have to workaround the fact our client application is running under the
-// same account as one of the members on the Windows Server. The default credential
-// cache file used by Java (`C:\Users\hazelcast\krb5cc_hazelcast`) already contains member credentials,
-
 === Run the client demo application
 
 The client configuration is ready, let's start the client application now:
@@ -358,7 +354,7 @@ Did anything go wrong in your setup? Try to look in more detail what's
 happening underhood. Hazelcast and Java itself provide system properties which allow
 printing Kerberos related debug messages to console.
 
-You can also also reconfigure log level for `com.hazelcast.security` category to inspect
+You can also reconfigure the log level for the `com.hazelcast.security` category to inspect
 authentication flow within the Hazelcast login modules.
 
 Just edit the Hazelcast batch files (`start.bat`, `clientConsole.bat`) and
@@ -393,13 +389,14 @@ You can also add the `debug` option to `Krb5LoginModule` configuration. E.g.
 
 == Summary
 
-We have configured Hazelcast Enterprise cluster with Kerberos based authentication
-on Active Directory domain.
+We have configured the Hazelcast Enterprise cluster with Kerberos-based authentication
+on the Active Directory domain.
 
-First, we used the simple Kerberos configuration for just for member authentication.
-Then we added full configuration and also included the client configuration.
+First, we used the simple Kerberos configuration just for member authentication.
+Then we added the full configuration and also included the client configuration.
 The client authorization was based on group membership defined in the Active Directory.
 
 == See Also
 
 - https://docs.hazelcast.org/docs/4.1/manual/html-single/index.html#kerberos-authentication[Kerberos authentication] section in Hazelcast Reference manual
+-
