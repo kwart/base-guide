@@ -133,6 +133,7 @@ The file will define the network discovery method and security.
 
 The simple form of Kerberos security configuration will be used - this should only be used for testing.
 
+Following configuration is for the application server:
 
 .C:\hazelcast-enterprise-4.1\demo\hazelcast.yml
 [source,yaml]
@@ -140,10 +141,24 @@ The simple form of Kerberos security configuration will be used - this should on
 include::../../../../hazelcast-simple.yml[]
 ----
 
+Use similar configuration on the domain controller. Just update principal name and
+path to the keytab file:
+
+[source,yaml]
+----
+principal: hz/10.0.0.10@ACME.COM
+keytab-file: hz-dc1.keytab
+----
+
 Don't forget to replace
 `PUT_THE_LICENSE_KEY_HERE` placeholder with a real license key.
 
-A warning message is printed to the console when the simple configuration form is
+Starting Hazelcast members on both servers should now result in forming
+a new Hazelcast cluster with both member.
+
+=== Simple Kerberos configuration warnings
+
+A warning message is printed to the console when the simple Kerberos configuration form is
 used for authentication. It gives us a hint on how to configure the full JAAS authentication.
 
 .Connection initiator warning
@@ -192,9 +207,7 @@ WARNING: Using generated Kerberos acceptor realm configuration is not intended f
 </realm>
 ----
 
-Starting Hazelcast members on both servers should now result in forming
-a new Hazelcast cluster with both member.
-
+We will show how to use the full Kerberos configuration form in next sections.
 
 == Configure Hazelcast Client
 
@@ -274,6 +287,14 @@ Cached Tickets: (2)
 
 If the `krbtgt` ticket is not listed in your environment, then try to logout and newly login
 with a Windows *domain* account.
+
+To make sure Java can access this ticket (stored in the Windows LSA store), we need
+to allow access of external applications to the store. Let's run the following command:
+
+[source]
+----
+Reg Add HKEY_LOCAL_MACHINE\System\CurrentControlSet\Control\Lsa\Kerberos\Parameters /v AllowTGTSessionKey /t REG_DWORD /d 1
+----
 
 === Configure Hazelcast client
 
