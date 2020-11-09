@@ -24,11 +24,12 @@ hazelcast:
               security-realm: krb5Initiator
               skip-authentication: true
               user-context: DC=acme,DC=com
-              user-filter: "(sAMAccountName={login})"
+              user-filter: "(|(sAMAccountName={login})(servicePrincipalName={login}))"
               role-mapping-mode: direct
               role-mapping-attribute: memberOf
               role-recursion-max-depth: 5
               role-name-attribute: CN
+              parse-dn: false
         identity:
           kerberos:
             realm: ACME.COM

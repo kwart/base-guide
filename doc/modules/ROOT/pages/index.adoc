@@ -11,7 +11,8 @@ include::{templates-url}/link-to-repo.adoc[]
 == What You’ll Learn
 
 In this guide, you will learn how to configure Hazelcast IMDG Enterprise to authenticate
-to cluster members and clients using Kerberos tickets in Microsoft Active Directory domain. We will also cover the role mapping based on user's group membership in the
+to cluster members and clients using Kerberos tickets in the Microsoft Active Directory domain.
+We will also cover the role mapping based on the user's group membership in the
 Active Directory.
 
 == Prerequisites
@@ -23,7 +24,7 @@ Active Directory.
 
 === Active Directory domain in MS Azure
 
-If you don't have Active Directory domain configured in your environment, you can provision
+If you don't have an Active Directory domain configured in your environment, you can provision
 one in MS Azure. There is an Azure deployment template on GitHub which
 starts a domain for you on few clicks:
 
@@ -36,13 +37,13 @@ The sample environment used in this guide contains 2 Windows servers
 - Domain controller with Active Directory (hostname: `dc1`)
 - Application server attached to the domain (hostname: `app1`)
 
-The servers are connected in a domain named `acme.com`. It's upper-case version
+The servers are connected to a domain named `acme.com`. Its upper-case version
 is also the Kerberos realm name (`ACME.COM`).
 
-Hazelcast connections are based on IP addresses, so they will be also necessary in the
-Kerberos authentication configuration.
+Hazelcast connections are based on IP addresses, so they will be also necessary
+for the Kerberos authentication configuration.
 
-Following addresses are used our environment:
+Following addresses are used in our environment:
 
 [source]
 ----
@@ -50,12 +51,12 @@ Following addresses are used our environment:
 10.0.0.11 app1
 ----
 
-You have to replace the hostname and IP values to fit your environment in commands
-and Hazelcast configuration files used in this guide.
+If you don't use the Azure test environment, then replace the hostname and IP values
+to fit your environment in commands and Hazelcast configuration files used in this guide.
 
 === Hazelcast port on Windows Firewall
 
-If you have Windows Firewall enabled, then allow access on the default Hazelcast
+If you have Windows Firewall enabled, then allow access to the default Hazelcast
 port numbers (`5701-5703`). You can use the following PowerShell command:
 
 [source,powershell]
@@ -65,8 +66,7 @@ include::../../../../allow-hazelcast-port.ps1[]
 
 === Kerberos configuration file
 
-Java searches its Kerberos configuration in `krb5.ini` file.
-One of its possible locations is the Windows installation directory.
+Java searches its Kerberos configuration in the `krb5.ini` file.
 So let's create one simple configuration file `C:\Windows\krb5.ini`
 on both servers.
 
@@ -77,7 +77,7 @@ include::../../../../krb5.ini[]
 ----
 
 NOTE: Kerberos protocol checks are often case-sensitive. Use the proper form
-of principal names and use upper-case Kerberos realm name!
+of principal names and use the upper-case Kerberos realm name!
 
 == Create member accounts in Active Directory
 
@@ -101,11 +101,16 @@ ktpass -princ hz/10.0.0.10@ACME.COM -mapuser hz-dc1@ACME.COM `
   -out hz-dc1.keytab +rndPass -ptype KRB5_NT_PRINCIPAL
 ----
 
+Commands used:
+
+- https://docs.microsoft.com/en-us/powershell/module/addsadministration/new-aduser[New-ADUser]
+- https://docs.microsoft.com/en-us/windows-server/administration/windows-commands/ktpass[ktpass]
+
 The `hz/10.0.0.10@ACME.COM` and `hz/10.0.0.11@ACME.COM` are Service Principal Names (SPN)
 and we will reference them in the Hazelcast member configuration.
 The `hz/` is a service prefix, followed by the IP address and the Kerberos realm name.
 
-Move the newly generated keytab files to `bin` directory within the Hazelcast
+Move the newly generated keytab files to the `bin` directory within the Hazelcast
 Enterprise installation (e.g. `C:\hazelcast-enterprise-4.1\bin`).
 
 NOTE: As the `hz-app1` account will be used by the application server we need to
@@ -114,7 +119,7 @@ to the application server.
 
 == Configure Hazelcast members
 
-We will use YAML configuration file located in the `bin` directory.
+We will use the YAML configuration file located in the `bin` directory.
 We need to remove the existing member configuration file (`hazelcast.xml`) first.
 
 [source,batch]
@@ -124,9 +129,9 @@ del hazelcast.xml
 ----
 
 Now we create the new configuration file called `hazelcast.yml`.
-The file will define network discovery method and the security.
-Usually there are 3 security realms defined for
-The simple form of Kerberos configuration will be used - this should only be used for testing.
+The file will define the network discovery method and security.
+
+The simple form of Kerberos security configuration will be used - this should only be used for testing.
 
 
 .C:\hazelcast-enterprise-4.1\demo\hazelcast.yml
@@ -139,7 +144,7 @@ Don't forget to replace
 `PUT_THE_LICENSE_KEY_HERE` placeholder with a real license key.
 
 A warning message is printed to the console when the simple configuration form is
-used for authentication. It gives us hint how to configure the full JAAS authentication.
+used for authentication. It gives us a hint on how to configure the full JAAS authentication.
 
 .Connection initiator warning
 [source]
@@ -204,7 +209,7 @@ Active Directory groups. The first one, called "Acme Cache" will have its name
 referenced in client permissions configuration on Hazelcast members.
 The second group "Acme Cache Czechia" will be a member of the first one.
 The active domain user (`hazelcast` in our environment)  will be added
-as a member to the "Acme Cache Czechia" group.
+as a member of the "Acme Cache Czechia" group.
 
 [source,powershell]
 ----
@@ -228,7 +233,7 @@ What's new here are the explicitly defined `Krb5LoginModule` configurations
 in security realms `krb5Initiator` and `krb5Acceptor`.
 
 We also added the `ldap` sub-section in `kerberos` authentication. It's responsible
-for searching recursivelly the group names which are used as client's roles.
+for searching recursively the group names which are used as client's roles.
 
 The last change is defining the `client-permissions` section. We add one
 universal permission which allows clients with role `Acme Cache` assigned all
@@ -240,26 +245,35 @@ Kerberos config now.
 
 === Check and Prepare Client Environment
 
-We will run Hazelcast Client Demo application on the application Windows Server.
+We will run the Hazelcast Client Demo application on the application Windows Server.
 
 Let's make sure the active user is authenticated to the domain using Kerberos
-first.
-
-We can use `klist` tool either from the Java installation or its sibling which
-comes in Windows (`C:\Windows\System32\klist.exe`).
+first. Let's use the `klist` tool in Windows (`C:\Windows\System32\klist.exe`).
 
 [source]
 ----
-C:\Users\hazelcast>klist
+C:\Users\hazelcast>C:\Windows\System32\klist.exe
 
-Credentials cache: C:\Users\hazelcast\krb5cc_hazelcast
+Current LogonId is 0:0x1fda985
 
-Default principal: hz/10.0.0.11@ACME.COM, 1 entry found.
+Cached Tickets: (2)
 
-[1]  Service Principal:  krbtgt/ACME.COM@ACME.COM
-     Valid starting:     Nov 05, 2020 19:21:35
-     Expires:            Nov 06, 2020 05:21:35
+#0>     Client: hazelcast @ ACME.COM
+        Server: krbtgt/ACME.COM @ ACME.COM
+        KerbTicket Encryption Type: AES-256-CTS-HMAC-SHA1-96
+        Ticket Flags 0x40e10000 -> forwardable renewable initial pre_authent name_canonicalize
+        Start Time: 11/9/2020 8:44:37 (local)
+        End Time:   11/9/2020 18:44:37 (local)
+        Renew Time: 11/16/2020 8:44:37 (local)
+        Session Key Type: AES-256-CTS-HMAC-SHA1-96
+        Cache Flags: 0x1 -> PRIMARY
+        Kdc Called: DC1.acme.com
+
+...
 ----
+
+If the `krbtgt` ticket is not listed in your environment, then try to logout and newly login
+with a Windows *domain* account.
 
 === Configure Hazelcast client
 
@@ -279,16 +293,39 @@ configuration.
 We don't define a keytab file, but we want to use existing credentials,
 so we set the `useTicketCache` option value to `true`.
 
+// Now we have to workaround the fact our client application is running under the
+// same account as one of the members on the Windows Server. The default credential
+// cache file used by Java (`C:\Users\hazelcast\krb5cc_hazelcast`) already contains member credentials,
+
+=== Run the client demo application
+
+The client configuration is ready, let's start the client application now:
+
+[source]
+----
+cd \hazelcast-enterprise-4.1\demo
+clientConsole.bat
+----
+
 == Troubleshooting
 
 Did anything go wrong in your setup? Try to look in more detail what's
-happening underhood. Java provides system properties which allow
-you to print Kerberos related debug messages to console. Just edit the Hazelcast
+happening underhood. Hazelcast and Java itself provide system properties which allow
+printing Kerberos related debug messages to console. Just edit the Hazelcast
 batch files (`start.bat`, `clientConsole.bat`) and add the following arguments to the `java` program call:
 
 [source]
 ----
--Dsun.security.krb5.debug=true -Dsun.security.jgss.debug=true
+-Djava.util.logging.config.file=debug-logging.properties \
+-Dsun.security.krb5.debug=true \
+-Dsun.security.jgss.debug=true
+----
+
+We will also need the new `debug-logging.properties` file beside the batch file:
+
+[source,properties]
+----
+include::../../../../debug-logging.properties[]
 ----
 
 You can also add the `debug` option to `Krb5LoginModule` configuration. E.g.
@@ -303,7 +340,6 @@ You can also add the `debug` option to `Krb5LoginModule` configuration. E.g.
           properties:
             debug: true
 ----
-
 
 == Summary
 
