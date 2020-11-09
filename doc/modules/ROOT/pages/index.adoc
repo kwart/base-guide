@@ -30,6 +30,15 @@ starts a domain for you on few clicks:
 
 * https://github.com/maxskunkworks/TLG/tree/master/tlg-base-config_3-vm
 
+.Screenshot - Azure AD template on GitHub
+image::screenshots/azure-ad-template-on-github.png[Azure AD template on GitHub.]
+
+.Screenshot - AD domain template parameters on Azure
+image::screenshots/azure-deployment.png[Azure AD deployment parameters.]
+
+.Screenshot - AD domain deployment on Azure
+image::screenshots/azure-deployed-ad-domain.png[Deployed AD domain.]
+
 == Environment
 
 The sample environment used in this guide contains 2 Windows servers
@@ -63,6 +72,9 @@ port numbers (`5701-5703`). You can use the following PowerShell command:
 ----
 include::../../../../allow-hazelcast-port.ps1[]
 ----
+
+.Screenshot - Adding Windows Firewall Rule in PowerShell
+image::screenshots/add-firewall-rule.png[Adding firewall rule in a PowerShell window.]
 
 === Kerberos configuration file
 
@@ -105,6 +117,9 @@ Commands used:
 
 - https://docs.microsoft.com/en-us/powershell/module/addsadministration/new-aduser[New-ADUser]
 - https://docs.microsoft.com/en-us/windows-server/administration/windows-commands/ktpass[ktpass]
+
+.Screenshot - New accounts in AD users GUI
+image::screenshots/ad-new-accounts-for-members.png[Users and groups in Active Directory.]
 
 The `hz/10.0.0.10@ACME.COM` and `hz/10.0.0.11@ACME.COM` are Service Principal Names (SPN)
 and we will reference them in the Hazelcast member configuration.
@@ -155,6 +170,9 @@ Don't forget to replace
 
 Starting Hazelcast members on both servers should now result in forming
 a new Hazelcast cluster with both member.
+
+.Screenshot - Running Hazelcast cluster
+image::screenshots/client-running.png[Running Hazelcast cluster.]
 
 === Simple Kerberos configuration warnings
 
@@ -328,12 +346,23 @@ cd \hazelcast-enterprise-4.1\demo
 clientConsole.bat
 ----
 
+The application should successfully connect to the cluster and data operations
+should work.
+
+.Screenshot - Client Console Demo Application
+image::screenshots/client-running.png[Running the client demo application.]
+
 == Troubleshooting
 
 Did anything go wrong in your setup? Try to look in more detail what's
 happening underhood. Hazelcast and Java itself provide system properties which allow
-printing Kerberos related debug messages to console. Just edit the Hazelcast
-batch files (`start.bat`, `clientConsole.bat`) and add the following arguments to the `java` program call:
+printing Kerberos related debug messages to console.
+
+You can also also reconfigure log level for `com.hazelcast.security` category to inspect
+authentication flow within the Hazelcast login modules.
+
+Just edit the Hazelcast batch files (`start.bat`, `clientConsole.bat`) and
+add the following arguments to the `java` program call:
 
 [source]
 ----
@@ -342,7 +371,7 @@ batch files (`start.bat`, `clientConsole.bat`) and add the following arguments t
 -Dsun.security.jgss.debug=true
 ----
 
-We will also need the new `debug-logging.properties` file beside the batch file:
+Create the new `debug-logging.properties` file beside the batch file:
 
 [source,properties]
 ----
@@ -364,6 +393,13 @@ You can also add the `debug` option to `Krb5LoginModule` configuration. E.g.
 
 == Summary
 
-// Provide a quick summary
+We have configured Hazelcast Enterprise cluster with Kerberos based authentication
+on Active Directory domain.
+
+First, we used the simple Kerberos configuration for just for member authentication.
+Then we added full configuration and also included the client configuration.
+The client authorization was based on group membership defined in the Active Directory.
 
 == See Also
+
+- https://docs.hazelcast.org/docs/4.1/manual/html-single/index.html#kerberos-authentication[Kerberos authentication] section in Hazelcast Reference manual
